@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candidate History</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <div class="theme-switch">
+        <span class="mode-label">Dark</span>
+        <label class="switch">
+            <input type="checkbox" id="themeToggle" onclick="toggleTheme()">
+            <span class="slider"></span>
+        </label>
+        <span class="mode-label">Light</span>
+    </div>
+
+    <div class="container history-container">
+        <div class="logo">AI HR</div>
+        <h1>Candidate History</h1>
+
+        <div class="dashboard-cards">
+            <div class="card">
+                <p>Total Candidates</p>
+                <h2>{{ total }}</h2>
+            </div>
+            <div class="card">
+                <p>Highly Recommended</p>
+                <h2>{{ highly_rec }}</h2>
+            </div>
+            <div class="card">
+                <p>Selected</p>
+                <h2>{{ selected }}</h2>
+            </div>
+            <div class="card">
+                <p>Rejected</p>
+                <h2>{{ rejected }}</h2>
+            </div>
+        </div>
+
+        <div class="nav-links-container">
+            <a href="/" class="nav-link-btn btn-blue">Back to Home</a>
+            <form action="/clear-history" method="POST" style="flex: 1;" onsubmit="return confirm('Are you sure you want to clear history?');">
+                <button type="submit" class="nav-link-btn btn-slate" style="margin:0; width:100%;">Clear History</button>
+            </form>
+            <button onclick="triggerExport()" class="nav-link-btn btn-green" style="margin:0; width:auto; display:inline-block; flex:1;">Export to Excel</button>
+            <a href="/logout" class="nav-link-btn btn-red">Logout</a>
+        </div>
+
+        <div class="filter-buttons">
+            <button onclick="filterTable('All')">All</button>
+            <button onclick="filterTable('Highly Recommended')">Highly Recommended</button>
+            <button onclick="filterTable('Selected')">Selected</button>
+            <button onclick="filterTable('Rejected')">Rejected</button>
+        </div>
+
+        <input type="text" id="searchBox" class="search-box" onkeyup="searchCandidates()" placeholder="Search candidate...">
+
+        <div style="width: 100%; overflow-x: auto; margin-top: 20px;">
+            <table id="historyTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Role</th>
+                        <th>Score</th>
+                        <th>Status</th>
+                        <th>Resume File</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in candidates %}
+                    <tr class="candidate-row" data-status="{{ c.status }}">
+                        <td>{{ c.name }}</td>
+                        <td>{{ c.email }}</td>
+                        <td>{{ c.phone }}</td>
+                        <td>{{ c.role }}</td>
+                        <td><strong>{{ c.score }}</strong></td>
+                        <td>
+                            <span class="{% if c.status == 'Selected' or c.status == 'Highly Recommended' %}status-green{% elif c.status == 'Pending' %}status-yellow{% else %}status-red{% endif %}">
+                                {{ c.status }}
+                            </span>
+                        </td>
+                        <td>{{ c.filename }}</td>
+                        <td>
+                            <div class="action-flex">
+                                <form action="/update_status" method="POST">
+                                    <input type="hidden" name="email" value="{{ c.email }}">
+                                    <input type="hidden" name="status" value="Selected">
+                                    <button type="submit" class="btn-action btn-select-action">Select</button>
+                                </form>
+                                <form action="/update_status" method="POST">
+                                    <input type="hidden" name="email" value="{{ c.email }}">
+                                    <input type="hidden" name="status" value="Rejected">
+                                    <button type="submit" class="btn-action btn-reject-action">Reject</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <footer>AI Resume Screening System | Data Science Project</footer>
+    </div>
+
+    <script>
+        // FORCED JAVASCRIPT DOWNLOAD TRIGGER ENGINE
+        function triggerExport() {
+            window.location.href = "/export";
+        }
+
+        function filterTable(status) {
+            let rows = document.querySelectorAll('.candidate-row');
+            rows.forEach(row => {
+                if (status === 'All' || row.getAttribute('data-status') === status) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function searchCandidates() {
+            let input = document.getElementById('searchBox').value.toLowerCase();
+            let rows = document.querySelectorAll('.candidate-row');
+            rows.forEach(row => {
+                let text = row.innerText.toLowerCase();
+                row.style.display = text.includes(input) ? '' : 'none';
+            });
+        }
+
+        function toggleTheme() {
+            let isLight = document.getElementById('themeToggle').checked;
+            document.body.classList.toggle('light-mode', isLight);
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+        }
+
+        window.onload = function() {
+            if(localStorage.getItem('theme') === 'light') {
+                document.getElementById('themeToggle').checked = true;
+                document.body.classList.add('light-mode');
+            }
+        }
+    </script>
+</body>
+</html>

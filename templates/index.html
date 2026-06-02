@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Screener</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <div class="theme-switch">
+        <span class="mode-label">Dark</span>
+        <label class="switch">
+            <input type="checkbox" id="themeToggle" onclick="toggleTheme()">
+            <span class="slider"></span>
+        </label>
+        <span class="mode-label">Light</span>
+    </div>
+
+    <div class="container">
+        <div class="logo">AI HR</div>
+        <h1>AI Resume Screener</h1>
+        <p style="text-align: center; color: #94a3b8; margin-bottom: 25px;">Upload resume to check matching percentage score instantly</p>
+
+        <form action="/" method="POST" enctype="multipart/form-data">
+            <div style="margin-bottom: 15px;">
+                <label for="job_role">Target Job Profile:</label>
+                <select name="job_role" id="job_role" required>
+                    {% for role in job_roles %}
+                        <option value="{{ role }}">{{ role }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label for="resume">Upload Resume (PDF only):</label>
+                <input type="file" name="resume" id="resume" accept=".pdf" required>
+            </div>
+
+            <button type="submit">Analyze Resume</button>
+        </form>
+
+        {% if candidate %}
+        <div class="result-box">
+            <h2 style="color: #60a5fa; margin-top: 0; text-align: center;">Analysis Result</h2>
+            <p><strong>Candidate Name:</strong> {{ candidate.name }}</p>
+            <p><strong>Email Address:</strong> {{ candidate.email }}</p>
+            <p><strong>Phone Number:</strong> {{ candidate.phone }}</p>
+            <p><strong>Applied Role:</strong> {{ candidate.role }}</p>
+            
+            <div style="margin: 20px 0; background: #111827; padding: 15px; border-radius: 10px; border-left: 5px solid #2563eb;">
+                <p style="font-size: 18px; margin: 0;">Match Score: <strong style="color: #60a5fa; font-size: 22px;">{{ candidate.score }}%</strong></p>
+                <p style="margin: 5px 0 0 0;">Status: 
+                    <span class="{% if candidate.status == 'Highly Recommended' %}status-green{% else %}status-yellow{% endif %}">
+                        {{ candidate.status }}
+                    </span>
+                </p>
+            </div>
+
+            {% if candidate.missing_skills %}
+            <p style="color: #ef4444; font-weight: bold; margin-bottom: 5px;">Missing Skills Matrix:</p>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                {% for skill in candidate.missing_skills %}
+                    <span style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; padding: 4px 10px; border-radius: 6px; font-size: 13px;">{{ skill }}</span>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p style="color: #10b981; font-weight: bold;">✨ Perfect Match! All target skills found in the resume.</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div style="text-align: center; margin-top: 25px;">
+            <a href="/login" style="color: #60a5fa; text-decoration: none; font-weight: bold; font-size: 14px;">Go to Admin Dashboard →</a>
+        </div>
+
+        <footer>AI Resume Screening System | Data Science Project</footer>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            let isLight = document.getElementById('themeToggle').checked;
+            document.body.classList.toggle('light-mode', isLight);
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+        }
+
+        window.onload = function() {
+            if(localStorage.getItem('theme') === 'light') {
+                document.getElementById('themeToggle').checked = true;
+                document.body.classList.add('light-mode');
+            }
+        }
+    </script>
+</body>
+</html>
